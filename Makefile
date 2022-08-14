@@ -583,6 +583,44 @@ EXTRA_CFLAGS += -I$(src)/platform
 #_PLATFORM_FILES := platform/platform_ops.o
 OBJS += $(_PLATFORM_FILES)
 
+ifeq ($(CONFIG_PLATFORM_AML_S905), y)
+EXTRA_CFLAGS += -DCONFIG_PLATFORM_AML_S905
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+EXTRA_CFLAGS += -DCONFIG_RADIO_WORK
+EXTRA_CFLAGS += -DCONFIG_CONCURRENT_MODE
+ifeq ($(shell test $(CONFIG_RTW_ANDROID) -ge 11; echo $$?), 0)
+EXTRA_CFLAGS += -DCONFIG_IFACE_NUMBER=3
+endif
+
+# default setting for Android
+# config CONFIG_RTW_ANDROID in main Makefile
+ARCH ?= arm64
+CROSS_COMPILE ?= /4.4_S905L_8822bs_compile/gcc-linaro-aarch64-linux-gnu-4.9-2014.09_linux/bin/aarch64-linux-gnu-
+ifndef KSRC
+EXTRA_CFLAGS += -w
+KSRC := $(KERNEL_SRC)
+EXTRA_CFLAGS += $(foreach d,$(shell test -d $(KERNEL_SRC)/$(M) && find $(shell cd $(KERNEL_SRC)/$(M);pwd) -type d),$(shell echo " -I$(d)"))
+endif
+
+ifeq ($(CONFIG_PCI_HCI), y)
+EXTRA_CFLAGS += -DCONFIG_PLATFORM_OPS
+_PLATFORM_FILES := platform/platform_linux_pc_pci.o
+OBJS += $(_PLATFORM_FILES)
+endif
+
+ifeq ($(CONFIG_RTL8852A), y)
+ifeq ($(CONFIG_SDIO_HCI), y)
+CONFIG_RTL8852AS ?= m
+USER_MODULE_NAME := 8852as
+endif
+ifeq ($(CONFIG_PCI_HCI), y)
+CONFIG_RTL8852AE ?= m
+USER_MODULE_NAME := 8852ae
+endif
+endif
+endif
+
 ########### CUSTOMER ################################
 USER_MODULE_NAME ?=
 ifneq ($(USER_MODULE_NAME),)
